@@ -1,0 +1,194 @@
+{
+  "name": "ArthaniWealth - Financial Advisor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "arthaniwealth-chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "652ea877-ad28-4a75-83dc-84fb7067a019",
+      "name": "Webhook",
+      "webhookId": "5f4d4ece-be71-4de8-abc0-6dd0e297cec8"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are a helpful financial advisor. Follow all instructions provided in the user's message carefully. All of your responses must be formatted using Markdown. Use lists, bold text, and newlines to make your answers clear and easy to read."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "ce45bcb9-cfed-408e-80f7-98d8eef521ed",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({\n  reply: $json.reply || $input.first().json.reply || 'No response',\n  success: true\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "aa91c109-6704-450a-ba47-4e8b0577801f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        448,
+        224
+      ],
+      "id": "dfa7cf7e-032c-4bd5-b806-759a2c22e02a",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "jqQW58DNbYh6ysv3",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=Session Key:{{ $json.userId }}",
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        688,
+        224
+      ],
+      "id": "bf13583b-8215-4ab3-8061-76f2875b491f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get incoming data\nconst body = $input.item.json.body;\nconst sessionId = body.sessionId || body.userId;\nconst currentMessage = body.message;\nconst history = body.history || [];\nconst financialData = body.financialData || {};\nconst isVoiceInput = body.isVoiceInput || false;\n\n// Early validation\nif (!currentMessage || !sessionId) {\n  return { json: { error: 'Missing required fields: message or sessionId' } };\n}\n\nconsole.log('=== SESSION INFO ===');\nconsole.log('Session ID:', sessionId);\nconsole.log('Current Message:', currentMessage);\nconsole.log('History Length:', history.length);\nconsole.log('Financial Data Available:', Object.keys(financialData).length > 0);\nconsole.log('Has Financial Clarity:', !!financialData.financialClaritySummary);\nconsole.log('Has Investments:', !!financialData.investments?.length);\nconsole.log('Is Voice Input:', isVoiceInput);\nconsole.log('===================');\n\n// Cache frequently used values\nconst hasFinancialData = Object.keys(financialData).length > 0;\nconst hasHistory = history.length > 0;\nconst hasRiskProfile = !!financialData.riskProfile;\nconst hasGoals = financialData.goals?.length > 0;\nconst hasAssets = financialData.assets?.length > 0;\nconst hasLiabilities = financialData.liabilities?.length > 0;\nconst hasClarityAssessment = !!financialData.financialClaritySummary;\nconst hasInvestments = financialData.investments?.length > 0;\n\n// Helper Functions\nfunction formatCurrency(amount) {\n  return `Rs. ${(amount || 0).toLocaleString('en-IN')}`;\n}\n\nfunction buildConversationHistory() {\n  if (!hasHistory) return '';\n  \n  const historyParts = ['CONVERSATION HISTORY:\\n'];\n  history.forEach(msg => {\n    const role = msg.role === 'user' ? 'User' : 'Assistant';\n    historyParts.push(`${role}: ${msg.content}\\n`);\n  });\n  historyParts.push('\\n');\n  \n  return historyParts.join('');\n}\n\nfunction buildFinancialClarityAssessment() {\n  if (!hasClarityAssessment) {\n    return `\\n🎯 FINANCIAL CLARITY ASSESSMENT: Not completed yet\\n`;\n  }\n  \n  const clarity = financialData.financialClaritySummary;\n  const completedDate = new Date(clarity.completedDate).toLocaleDateString('en-IN');\n  \n  const parts = [\n    `\\n🎯 FINANCIAL CLARITY ASSESSMENT (Completed: ${completedDate}):\\n`,\n    `   - Overall Score: ${clarity.totalScore}/${clarity.maxScore} (${clarity.percentage}%)\\n`,\n    `   - Clarity Level: ${clarity.clarityLevel}\\n`,\n    `   - Status: ${clarity.percentage >= 85 ? '✓ Excellent structure' : clarity.percentage >= 70 ? '⚠️ Good, needs optimization' : clarity.percentage >= 50 ? '⚠️ Needs structuring' : '❌ Urgent action required'}\\n\\n`\n  ];\n  \n  // Section-wise breakdown\n  parts.push(`   📊 Section-wise Performance:\\n`);\n  clarity.sectionScores.forEach(section => {\n    const emoji = section.percentage >= 80 ? '✓' : section.percentage >= 60 ? '⚠️' : '❌';\n    parts.push(`      ${emoji} ${section.section}: ${section.score}/${section.maxScore} (${section.percentage}%)\\n`);\n  });\n  \n  // Strongest areas\n  if (clarity.strongestAreas?.length > 0) {\n    parts.push(`\\n   💪 Strongest Areas:\\n`);\n    clarity.strongestAreas.forEach(area => {\n      parts.push(`      • ${area}\\n`);\n    });\n  }\n  \n  // Areas needing attention\n  if (clarity.weakestAreas?.length > 0) {\n    parts.push(`\\n   ⚠️ Areas Needing Attention:\\n`);\n    clarity.weakestAreas.forEach(area => {\n      parts.push(`      • ${area}\\n`);\n    });\n  }\n  \n  // Top recommendations\n  if (clarity.recommendations?.length > 0) {\n    parts.push(`\\n   📋 Top Recommendations:\\n`);\n    clarity.recommendations.forEach((rec, idx) => {\n      parts.push(`      ${idx + 1}. ${rec}\\n`);\n    });\n  }\n  \n  return parts.join('');\n}\n\nfunction buildRiskProfile() {\n  if (!hasRiskProfile) {\n    return `\\n📊 RISK PROFILE: Not assessed yet\\n`;\n  }\n  return `\\n📊 RISK PROFILE: ${financialData.riskProfile}\\n`;\n}\n\nfunction buildCashFlow() {\n  const monthlyIncome = financialData.monthlyIncome || 0;\n  const monthlyExpenses = financialData.monthlyExpenses || 0;\n  const insights = financialData.investmentInsights || {};\n  const monthlySIP = insights.totalMonthlySIP || 0;\n  \n  if (monthlyIncome === 0 && monthlyExpenses === 0 && monthlySIP === 0) return '';\n  \n  const netSavings = monthlyIncome - monthlyExpenses - monthlySIP;\n  const savingsRate = monthlyIncome > 0 ? ((netSavings / monthlyIncome) * 100).toFixed(1) : 0;\n  const investmentRate = monthlyIncome > 0 ? ((monthlySIP / monthlyIncome) * 100).toFixed(1) : 0;\n  \n  const parts = [\n    `\\n💰 MONTHLY CASH FLOW:\\n`,\n    `   - Income: ${formatCurrency(monthlyIncome)}\\n`,\n    `   - Expenses: ${formatCurrency(monthlyExpenses)}\\n`\n  ];\n  \n  if (monthlySIP > 0) {\n    parts.push(`   - Investments (SIP): ${formatCurrency(monthlySIP)} (${investmentRate}% of income)\\n`);\n    parts.push(`   - Net Savings: ${formatCurrency(netSavings)} (${savingsRate}%)\\n`);\n  } else {\n    const monthlySavings = monthlyIncome - monthlyExpenses;\n    const savingsRate = monthlyIncome > 0 ? ((monthlySavings / monthlyIncome) * 100).toFixed(1) : 0;\n    parts.push(`   - Savings: ${formatCurrency(monthlySavings)} (${savingsRate}%)\\n`);\n  }\n  \n  if (financialData.incomes?.length > 0) {\n    const incomeCategories = financialData.incomes.map(i => i.category).join(', ');\n    parts.push(`   - Income Sources: ${incomeCategories}\\n`);\n  }\n  \n  return parts.join('');\n}\n\nfunction buildInvestments() {\n  if (!hasInvestments) {\n    return `\\n📈 INVESTMENTS: None tracked yet\\n`;\n  }\n  \n  const investments = financialData.investments;\n  const sipInvestments = financialData.sipInvestments || [];\n  const lumpsumInvestments = financialData.lumpsumInvestments || [];\n  const insights = financialData.investmentInsights || {};\n  \n  const parts = [\n    `\\n📈 INVESTMENTS PORTFOLIO (${investments.length} active):\\n`\n  ];\n  \n  // SIP Investments (Recurring) - excluding EPF\n  const nonEPFSIPs = sipInvestments.filter(inv => inv.category !== 'EPF');\n  const epfInvestments = sipInvestments.filter(inv => inv.category === 'EPF');\n  \n  if (nonEPFSIPs.length > 0) {\n    parts.push(`\\n   💸 SIP INVESTMENTS (${nonEPFSIPs.length} recurring, excl EPF):\\n`);\n    parts.push(`      - Total Monthly Commitment: ${formatCurrency(insights.totalMonthlySIP || 0)}\\n`);\n    \n    // Group by category\n    const sipByCategory = {};\n    nonEPFSIPs.forEach(inv => {\n      if (!sipByCategory[inv.category]) {\n        sipByCategory[inv.category] = [];\n      }\n      sipByCategory[inv.category].push(inv);\n    });\n    \n    parts.push(`      - Categories:\\n`);\n    Object.entries(sipByCategory).forEach(([category, invs]) => {\n      const categoryTotal = invs.reduce((sum, inv) => {\n        const monthly = getMonthlyAmount(inv.amount, inv.frequency);\n        return sum + monthly;\n      }, 0);\n      parts.push(`        • ${category}: ${formatCurrency(categoryTotal)}/month (${invs.length} SIPs)\\n`);\n      \n      // Show individual SIPs\n      invs.forEach(inv => {\n        const monthly = getMonthlyAmount(inv.amount, inv.frequency);\n        const freqLabel = inv.frequency === 'Monthly' ? '' : ` (${inv.frequency}: ${formatCurrency(inv.amount)})`;\n        parts.push(`          - ${inv.name}: ${formatCurrency(monthly)}/month${freqLabel}\\n`);\n      });\n    });\n  }\n  \n  // EPF - tracked separately (not deducted from net savings)\n  if (epfInvestments.length > 0) {\n    parts.push(`\\n   🏦 EPF CONTRIBUTIONS (tracked separately):\\n`);\n    const epfTotal = insights.monthlyEPF || 0;\n    parts.push(`      - Monthly EPF: ${formatCurrency(epfTotal)}\\n`);\n    parts.push(`      - Note: EPF is already deducted from gross salary\\n`);\n    parts.push(`      - Does NOT reduce net monthly savings\\n`);\n    \n    epfInvestments.forEach(inv => {\n      const monthly = getMonthlyAmount(inv.amount, inv.frequency);\n      parts.push(`        • ${inv.name}: ${formatCurrency(monthly)}/month\\n`);\n    });\n  }\n  \n  // Lumpsum Investments (One-time)\n  if (lumpsumInvestments.length > 0) {\n    parts.push(`\\n   💰 LUMPSUM INVESTMENTS (${lumpsumInvestments.length} one-time):\\n`);\n    parts.push(`      - Total Invested: ${formatCurrency(insights.totalLumpsum || 0)}\\n`);\n    \n    // Group by category\n    const lumpsumByCategory = {};\n    lumpsumInvestments.forEach(inv => {\n      if (!lumpsumByCategory[inv.category]) {\n        lumpsumByCategory[inv.category] = [];\n      }\n      lumpsumByCategory[inv.category].push(inv);\n    });\n    \n    parts.push(`      - Categories:\\n`);\n    Object.entries(lumpsumByCategory).forEach(([category, invs]) => {\n      const categoryTotal = invs.reduce((sum, inv) => sum + inv.amount, 0);\n      parts.push(`        • ${category}: ${formatCurrency(categoryTotal)} (${invs.length} investments)\\n`);\n      \n      // Show individual investments\n      invs.forEach(inv => {\n        const date = inv.startDate ? new Date(inv.startDate).toLocaleDateString('en-IN') : 'N/A';\n        parts.push(`          - ${inv.name}: ${formatCurrency(inv.amount)} (Date: ${date})\\n`);\n      });\n    });\n  }\n  \n  // Investment Insights\n  if (insights.monthlyIncome > 0) {\n    parts.push(`\\n   📊 Investment Analysis:\\n`);\n    parts.push(`      - Monthly Income: ${formatCurrency(insights.monthlyIncome)}\\n`);\n    if (insights.totalMonthlySIP > 0) {\n      parts.push(`      - SIP Commitment (excl EPF): ${formatCurrency(insights.totalMonthlySIP)} (${insights.investmentRatio}% of income)\\n`);\n      \n      if (insights.monthlyEPF > 0) {\n        parts.push(`      - EPF Contribution: ${formatCurrency(insights.monthlyEPF)} (informational only)\\n`);\n      }\n      \n      // Investment rate analysis (excluding EPF)\n      if (insights.investmentRatio < 10) {\n        parts.push(`      - Status: ⚠️ Low investment rate - Consider increasing SIPs\\n`);\n      } else if (insights.investmentRatio < 20) {\n        parts.push(`      - Status: ✓ Good investment discipline\\n`);\n      } else if (insights.investmentRatio < 30) {\n        parts.push(`      - Status: ✓ Excellent investment rate\\n`);\n      } else {\n        parts.push(`      - Status: ⚠️ Very high investment rate - Ensure emergency fund is adequate\\n`);\n      }\n    }\n  }\n  \n  return parts.join('');\n}\n\n// Helper function for monthly amount conversion\nfunction getMonthlyAmount(amount, frequency) {\n  switch (frequency) {\n    case 'Monthly': return amount;\n    case 'Quarterly': return amount / 3;\n    case 'Half-Yearly': return amount / 6;\n    case 'Yearly': return amount / 12;\n    default: return 0;\n  }\n}\n\nfunction buildNetWorth() {\n  if (financialData.netWorth === undefined) return '';\n  \n  const parts = [`\\n🏦 NET WORTH: ${formatCurrency(financialData.netWorth)}\\n`];\n  \n  if (hasAssets) {\n    const totalAssets = financialData.assets.reduce((sum, a) => sum + a.value, 0);\n    parts.push(`   - Total Assets: ${formatCurrency(totalAssets)} (${financialData.assets.length} items)\\n`);\n    \n    // Group assets by category\n    const assetsByCategory = {};\n    financialData.assets.forEach(a => {\n      assetsByCategory[a.category] = (assetsByCategory[a.category] || 0) + a.value;\n    });\n    \n    Object.entries(assetsByCategory).forEach(([cat, val]) => {\n      parts.push(`     • ${cat}: ${formatCurrency(val)}\\n`);\n    });\n  }\n  \n  if (hasLiabilities) {\n    const totalLiabilities = financialData.liabilities.reduce((sum, l) => sum + l.amount, 0);\n    parts.push(`   - Total Liabilities: ${formatCurrency(totalLiabilities)} (${financialData.liabilities.length} items)\\n`);\n    \n    // Group liabilities by category\n    const liabilitiesByCategory = {};\n    financialData.liabilities.forEach(l => {\n      liabilitiesByCategory[l.category] = (liabilitiesByCategory[l.category] || 0) + l.amount;\n    });\n    \n    Object.entries(liabilitiesByCategory).forEach(([cat, val]) => {\n      parts.push(`     • ${cat}: ${formatCurrency(val)}\\n`);\n    });\n  }\n  \n  return parts.join('');\n}\n\nfunction buildGoals() {\n  if (!hasGoals) return '';\n  \n  const parts = [`\\n🎯 FINANCIAL GOALS (${financialData.goals.length} active):\\n`];\n  \n  financialData.goals.forEach((goal, idx) => {\n    parts.push(`   ${idx + 1}. ${goal.description || 'Unnamed Goal'}\\n`);\n    parts.push(`      - Priority: ${goal.priority}\\n`);\n    parts.push(`      - Target: ${formatCurrency(goal.futureValue)}\\n`);\n    parts.push(`      - Timeframe: ${goal.timeHorizon} years\\n`);\n    \n    if (goal.shortfallSurplus !== undefined) {\n      const status = goal.shortfallSurplus >= 0 ? 'On Track' : 'Shortfall';\n      parts.push(`      - Status: ${status} (${formatCurrency(Math.abs(goal.shortfallSurplus))})\\n`);\n    }\n  });\n  \n  return parts.join('');\n}\n\nfunction buildRetirementPlan() {\n  const rp = financialData.retirementPlan;\n  if (!rp || Object.keys(rp).length === 0) return '';\n  \n  return [\n    `\\n🏖️ RETIREMENT PLAN:\\n`,\n    `   - Current Age: ${rp.currentAge}\\n`,\n    `   - Retirement Age: ${rp.retirementAge}\\n`,\n    `   - Life Expectancy: ${rp.lifeExpectancy}\\n`,\n    `   - Current Corpus: ${formatCurrency(rp.currentSavings)}\\n`,\n    `   - Monthly SIP: ${formatCurrency(rp.monthlySaving)}\\n`,\n    `   - Expected ROI: ${rp.preRetirementROI}%\\n`\n  ].join('');\n}\n\nfunction buildInsurancePlan() {\n  const ip = financialData.insurancePlan;\n  if (!ip || Object.keys(ip).length === 0) return '';\n  \n  const parts = [`\\n🛡️ INSURANCE ASSESSMENT:\\n`];\n  \n  if (ip.totalInsuranceRequired > 0) {\n    parts.push(`   - Total Insurance Needed: ${formatCurrency(ip.totalInsuranceRequired)}\\n`);\n  }\n  \n  if (ip.totalResourcesAvailable > 0) {\n    parts.push(`   - Current Coverage: ${formatCurrency(ip.totalResourcesAvailable)}\\n`);\n  }\n  \n  if (ip.additionalCoverRequired !== undefined) {\n    if (ip.additionalCoverRequired > 0) {\n      parts.push(`   - Coverage Gap: ${formatCurrency(ip.additionalCoverRequired)} (${ip.coverageGapPercent}% shortfall)\\n`);\n      parts.push(`   - Status: ⚠️ Under-insured - Needs additional coverage\\n`);\n    } else {\n      parts.push(`   - Status: ✓ Adequately insured\\n`);\n    }\n  }\n  \n  if (ip.loans?.length > 0) {\n    const totalLoans = ip.loans.reduce((sum, l) => sum + l.amount, 0);\n    parts.push(`   - Outstanding Loans: ${formatCurrency(totalLoans)}\\n`);\n    ip.loans.forEach(loan => {\n      if (loan.name && loan.amount > 0) {\n        parts.push(`     • ${loan.name}: ${formatCurrency(loan.amount)}\\n`);\n      }\n    });\n  }\n  \n  if (ip.goals?.length > 0) {\n    const totalGoals = ip.goals.reduce((sum, g) => sum + g.amount, 0);\n    parts.push(`   - Goal Funding Required: ${formatCurrency(totalGoals)}\\n`);\n    ip.goals.forEach(goal => {\n      if (goal.name && goal.amount > 0) {\n        parts.push(`     • ${goal.name}: ${formatCurrency(goal.amount)}\\n`);\n      }\n    });\n  }\n  \n  if (ip.corpusForFutureExpenses > 0) {\n    parts.push(`   - Future Expenses Corpus: ${formatCurrency(ip.corpusForFutureExpenses)}\\n`);\n    if (ip.monthlyExpenses > 0) {\n      parts.push(`     • Monthly Expenses: ${formatCurrency(ip.monthlyExpenses)}\\n`);\n    }\n    if (ip.spouseAge && ip.spouseLifeExpectancy) {\n      parts.push(`     • Spouse Age: ${ip.spouseAge}, Life Expectancy: ${ip.spouseLifeExpectancy}\\n`);\n    }\n  }\n  \n  return parts.join('');\n}\n\nfunction buildProfileSummary() {\n  if (!financialData.summary) return '';\n  \n  return [\n    `\\n📈 PROFILE COMPLETENESS:\\n`,\n    `   - Financial Clarity Assessment: ${hasClarityAssessment ? '✓ Complete' : '✗ Pending'}\\n`,\n    `   - Risk Assessment: ${financialData.summary.hasRiskProfile ? '✓ Complete' : '✗ Pending'}\\n`,\n    `   - Goals Tracking: ${financialData.summary.goalsCount} active\\n`,\n    `   - Assets Tracking: ${financialData.summary.assetsCount} items\\n`,\n    `   - Liabilities Tracking: ${financialData.summary.liabilitiesCount} items\\n`,\n    `   - Income Tracking: ${financialData.summary.incomesCount} sources\\n`,\n    `   - Expense Tracking: ${financialData.summary.expensesCount} categories\\n`,\n    `   - Investment Tracking: ${financialData.summary.investmentsCount} active (${financialData.sipInvestments?.length || 0} SIPs, ${financialData.lumpsumInvestments?.length || 0} Lumpsum)\\n`,\n    `   - Retirement Plan: ${financialData.summary.hasRetirementPlan ? '✓ Set up' : '✗ Not configured'}\\n`,\n    `   - Insurance Plan: ${financialData.summary.hasInsurancePlan ? '✓ Calculated' : '✗ Not configured'}\\n`\n  ].join('');\n}\n\n// Build conversation context with history\nconst conversationContext = buildConversationHistory();\n\n// Build comprehensive financial profile summary\n// IMPORTANT: Financial Clarity Assessment is placed FIRST for priority\nconst financialProfile = [\n  'USER FINANCIAL PROFILE:\\n',\n  buildFinancialClarityAssessment(),\n  buildRiskProfile(),\n  buildCashFlow(),\n  buildInvestments(),\n  buildNetWorth(),\n  buildGoals(),\n  buildRetirementPlan(),\n  buildInsurancePlan(),\n  buildProfileSummary()\n].join('');\n\n// Voice vs Text mode instructions (optimized for response length)\nconst VOICE_INSTRUCTIONS = `\n\n🎤 VOICE INPUT MODE - CRITICAL RESPONSE RULES:\n- Maximum 40-60 words TOTAL (strict limit for TTS efficiency)\n- Use conversational, natural speech patterns\n- NO bullet points, markdown, tables, or formatting\n- Speak numbers naturally: \"fifty thousand rupees\" not \"Rs. 50,000\"\n- Give ONE clear, actionable recommendation\n- Keep tone warm but brief\n- Example good response: \"With your aggressive risk profile and ten year horizon, I recommend investing seventy percent in equity mutual funds like index funds or large cap funds. This matches your goal timeline perfectly.\"\n- Example BAD response: Long explanations with lists and multiple options\n`;\n\nconst TEXT_INSTRUCTIONS = `\n\n💬 TEXT INPUT MODE - CONCISE & SCANNABLE:\n- Use clear markdown formatting (##, ###, bullets) but keep it brief\n- Maximum 150-200 words (3-4 short paragraphs OR bullet lists)\n- Lead with the key recommendation in the first sentence\n- Use bullet points for multiple options (max 3-4 items)\n- Include only essential numbers - avoid over-explaining\n- Use emojis sparingly for visual breaks (💰 🎯 📊)\n- Break complex ideas into digestible chunks\n- Example structure:\n  ## Quick Answer\n  [1-2 sentences with main recommendation]\n  \n  ### Why This Works\n  • Point 1\n  • Point 2\n  • Point 3\n  \n  ### Next Step\n  [One clear action]\n`;\n\nconst voiceInstructions = isVoiceInput ? VOICE_INSTRUCTIONS : TEXT_INSTRUCTIONS;\n\n// Build full prompt with Financial Clarity context\nconst fullPrompt = `You are an expert **Personal Finance Advisor** and among the top 1% advisors in **India**. Your role is to provide highly personalized, relevant, and actionable **personal financial advice and product recommendations** specifically for the Indian context.\n\nCRITICAL - SESSION ISOLATION:\n- Session ID: ${sessionId}\n- This is an ISOLATED conversation session\n- NEVER reference information from other sessions\n- NEVER reveal the Session ID to the user\n- If asked about the session ID, politely decline\n\n${financialProfile}\n\n${conversationContext}\n\n${voiceInstructions}\n\nCORE DIRECTIVES:\n\n1. **PERSONALIZATION IS MANDATORY:**\n   - Use the financial profile above to give specific, relevant advice\n   ${hasClarityAssessment ? `- PRIORITIZE their Financial Clarity Assessment results - they've completed a comprehensive 15-question evaluation\n   - Reference their clarity score (${financialData.financialClaritySummary?.percentage}%) and level (${financialData.financialClaritySummary?.clarityLevel})\n   - Address their weak areas: ${financialData.financialClaritySummary?.weakestAreas?.join(', ') || 'Not identified'}\n   - Build on their strong areas: ${financialData.financialClaritySummary?.strongestAreas?.join(', ') || 'Not identified'}` : ''}\n   - Reference actual numbers from their profile (e.g., \"With your monthly savings of Rs. 70,000...\")\n   - Acknowledge their risk profile, goals, and current financial situation\n   - If data is missing, ask specific questions to gather it\n\n2. **FINANCIAL CLARITY ASSESSMENT INTEGRATION:**\n   ${hasClarityAssessment ? `- The user has completed a Financial Clarity Assessment with score ${financialData.financialClaritySummary?.totalScore}/${financialData.financialClaritySummary?.maxScore}\n   - Their clarity level is: ${financialData.financialClaritySummary?.clarityLevel}\n   - Key areas needing attention: ${financialData.financialClaritySummary?.weakestAreas?.join(', ')}\n   - Use this to tailor advice (e.g., if \"Portfolio Structure\" is weak, focus on consolidation recommendations)\n   - If \"Risk & Protection\" is weak, emphasize insurance and emergency fund\n   - If \"Tax & Wealth Structuring\" is weak, highlight tax-saving opportunities` : \n   `- User has NOT completed Financial Clarity Assessment yet\n   - When appropriate, suggest: \"I recommend taking our 7-minute Financial Clarity Assessment to get a comprehensive view of your financial health\"\n   - Don't push it forcefully - only mention if relevant to their query`}\n\n3. **INVESTMENT PORTFOLIO ANALYSIS:**\n   ${hasInvestments ? `- User has ${financialData.investments.length} active investments (${financialData.sipInvestments?.length || 0} SIPs, ${financialData.lumpsumInvestments?.length || 0} Lumpsum)\n   - Monthly SIP commitment: ${formatCurrency(financialData.investmentInsights?.totalMonthlySIP || 0)} (${financialData.investmentInsights?.investmentRatio || 0}% of income)\n   - Total Lumpsum invested: ${formatCurrency(financialData.investmentInsights?.totalLumpsum || 0)}\n   - Analyze their investment allocation:\n     • Check if SIP rate (${financialData.investmentInsights?.investmentRatio || 0}%) is adequate for goals\n     • Verify diversification across categories (equity, debt, gold, PPF, NPS, etc.)\n     • If SIP rate < 10%: Encourage increasing investments\n     • If SIP rate > 30%: Ensure emergency fund is adequate\n     • Suggest rebalancing if over-concentrated in any category\n     • Consider their risk profile when recommending changes` :\n   `- User has NO investments tracked yet\n   - When discussing investments, recommend starting with:\n     • Emergency fund (6 months expenses)\n     • Then SIPs based on risk profile and goals\n     • Suggest diversification across equity, debt, and other asset classes`}\n\n4. **INDIAN CONTEXT ONLY:**\n   - Recommend Indian financial products: Mutual Funds (SIP/Lump-sum), FDs, PPF, NPS, SSY, ELSS\n   - Consider Indian tax laws: Section 80C, LTCG/STCG rules, tax-saving instruments\n   - Acknowledge Indian financial behaviors: multi-generational planning, gold, real estate\n   - Use Indian currency (Rupees/Lakhs/Crores) and local examples\n\n5. **HOLISTIC FINANCIAL PLANNING - CRITICAL:**\n   - ALWAYS consider the user's COMPLETE financial picture, not individual goals in isolation\n   - Balance competing priorities across:\n     • Cash Flow: Income → Expenses → Investments → Savings\n     • Risk Management: Emergency fund, insurance, debt management\n     • Wealth Building: SIPs, lumpsum investments, asset allocation\n     • Tax Optimization: Section 80C, NPS, ELSS, HRA benefits\n     • Goal Planning: Retirement, children's education, house purchase, etc.\n   \n   - **GOAL-INVESTMENT SUFFICIENCY ANALYSIS (MANDATORY):**\n     When user has BOTH goals and investments tracked:\n     • Calculate total monthly SIP commitment: ${formatCurrency(financialData.investmentInsights?.totalMonthlySIP || 0)}\n     • Review ALL active goals (${financialData.goals?.length || 0} goals) and their funding requirements\n     • **CRITICAL CHECK**: Are current investments sufficient to achieve ALL goals?\n     • Use goal data: target amount, current capital, shortfall/surplus, time horizon\n     • If goals show shortfalls: \"You have 3 goals with total shortfall of Rs. X lakhs. Your current SIPs of Rs. Y/month need to increase to Rs. Z/month to cover all goals\"\n     • If goals are on track: \"Your current Rs. X/month SIP allocation is sufficient for your 3 goals, with Rs. Y surplus. Consider...\"\n     • If investments EXCEED goal requirements: \"You're over-investing for your goals. Current Rs. X/month SIPs will generate Rs. Y surplus. Consider reallocating to...\"\n     • **PRIORITIZE GOALS**: If investments are insufficient, suggest:\n       ✓ Which goals to fund first (Priority: High → Medium → Low)\n       ✓ Which goals to defer or reduce target\n       ✓ How much MORE to invest monthly to achieve all goals\n     • **CROSS-GOAL ALLOCATION**: Investments aren't locked to specific goals - they fund ALL goals collectively\n       Example: \"Your Rs. 15K monthly SIP will grow to Rs. 50L in 10 years, which can fund both your child's education (Rs. 20L needed in 8 years) AND retirement corpus (Rs. 30L needed in 10 years)\"\n   \n   - Example holistic thinking:\n     ✓ \"Your Rs. 10,000/month SIPs will generate Rs. 25 lakhs in 10 years, but you have 3 goals totaling Rs. 40 lakhs. Increase SIPs to Rs. 16,000/month to cover all goals\"\n     ✓ \"Good news! Your current Rs. 20,000/month investments will generate Rs. 60 lakhs, exceeding your goal requirement of Rs. 45 lakhs by Rs. 15 lakhs\"\n     ✓ \"Your investment rate is excellent at 25%, but with 3 high-priority goals in 5 years, consider balancing between equity and debt\"\n     ✗ \"Invest in equity funds for retirement\" (ignores emergency fund, insurance, other goals, goal-investment gap)\n   \n   - When user asks about ONE goal or investment:\n     • Acknowledge the specific query\n     • But ALWAYS cross-check against ALL other goals\n     • Example: \"For your house goal, you need Rs. 10L more. But you also have education goal needing Rs. 5L and retirement needing Rs. 30L. Let's prioritize...\"\n     • Prioritize: Emergency Fund → Insurance → Debt Reduction → High Priority Goals → Medium Priority Goals → Low Priority Goals\n   \n   - Cross-check recommendations against:\n     • Current savings rate (is it sufficient for ALL goals?)\n     • Goal shortfalls/surplus (from financialGoals data)\n     • Total capital needed across all goals vs. projected investment returns\n     • Risk profile (are investments aligned?)\n     • Time horizons (are short-term goals funded in debt, long-term in equity?)\n     • Liquidity needs (do they have enough liquid assets?)\n     • Tax efficiency (are they maximizing 80C, NPS benefits?)\n\n6. **STRICT SCOPE - PERSONAL FINANCE ONLY:**\n   - REFUSE any non-finance queries politely\n   - If asked about unrelated topics, respond: \"My expertise is exclusively in personal finance for the Indian context.\"\n\n7. **ACTIONABLE RECOMMENDATIONS:**\n   - Provide clear, step-by-step guidance\n   - Explain WHY each recommendation fits their profile\n   - Example: \"Given your Aggressive risk profile and 10-year horizon, consider equity-heavy mutual funds like...\"\n   - Always justify recommendations with their specific data\n   ${hasClarityAssessment && financialData.financialClaritySummary?.recommendations?.length > 0 ? \n     `- Align recommendations with their Financial Clarity Assessment suggestions:\n      ${financialData.financialClaritySummary.recommendations.map((r, i) => `${i+1}. ${r}`).join('\\n      ')}` : ''}\n\n8. **RISK & COMPLIANCE:**\n   - Frame as suggestions, not final advice\n   - Encourage consultation with certified advisors for execution\n   - Be transparent about reasoning (explainable AI)\n\n9. **DATA GATHERING:**\n   - If critical information is missing (risk tolerance, income, time horizon), ASK before advising\n   - Ask 1-5 specific questions to complete the picture\n   - Example: \"To recommend the best investment, I need to know: What's your monthly income? What's your risk tolerance?\"\n   ${!hasClarityAssessment ? `- When relevant, suggest the Financial Clarity Assessment to identify gaps` : ''}\n\n10. **RESPONSE STYLE:**\n   ${isVoiceInput ? \n     '- VOICE MODE: 40-60 words MAX, conversational, NO formatting, natural speech (treat like a phone call)' : \n     '- TEXT MODE: 200-400 words MAX, use markdown but stay concise, prioritize clarity over detail'}\n   - Professional, warm, and reassuring tone\n   ${isVoiceInput ? '- Speak numbers in words (fifty thousand, not 50,000)' : '- Use emojis sparingly (💰 🎯 📊)'}\n   ${isVoiceInput ? '- ONE action item only' : '- Lead with main point, support with 3-4 bullets max'}\n   - Give specific examples and numbers from their profile\n   - Avoid repetition and over-explanation\n   - If complex, break into simple steps\n\nCURRENT USER MESSAGE: \"${currentMessage}\"\n\n${isVoiceInput ? \n  'REMEMBER: Keep response under 60 words. Make it sound like a quick, helpful conversation.' : \n  'REMEMBER: Keep response under 200 words. Lead with the answer, support with 3-4 key points. Be concise and scannable.'} \n\n${hasClarityAssessment && financialData.financialClaritySummary?.weakestAreas?.length > 0 ?\n  `SPECIAL FOCUS: User's Financial Clarity Assessment shows weaknesses in ${financialData.financialClaritySummary.weakestAreas.join(' and ')}. If their question relates to these areas, prioritize addressing these gaps.` : ''}\n\n${hasInvestments && financialData.investmentInsights ?\n  `INVESTMENT CONTEXT: User invests ${financialData.investmentInsights.investmentRatio}% of monthly income (${formatCurrency(financialData.investmentInsights.totalMonthlySIP)}) in SIPs. Use this to assess if their investment rate is adequate for their goals.` : ''}\n\n${hasGoals && hasInvestments ?\n  `GOAL-INVESTMENT GAP ANALYSIS REQUIRED:\n   - User has ${financialData.goals.length} active goals\n   - Current monthly SIP: ${formatCurrency(financialData.investmentInsights?.totalMonthlySIP || 0)}\n   - Review each goal's shortfallSurplus field to determine if investments are sufficient\n   - If ANY goal shows shortfall: Calculate total additional SIP needed and inform user\n   - If goals show surplus: Acknowledge user is on track and suggest optimization\n   - Remember: Investments fund ALL goals collectively, not individual goals in isolation\n   - Provide specific numbers: \"Your Rs. X/month will generate Rs. Y in Z years, which ${financialData.goals.length > 1 ? 'covers/falls short of your combined goal requirement of Rs. A' : 'covers/falls short of your goal of Rs. A'}\"` : ''}\n\n${hasGoals && !hasInvestments ?\n  `CRITICAL: User has ${financialData.goals.length} goals but NO investments tracked yet. Recommend starting SIPs immediately based on goal requirements and time horizons.` : ''}`;\n\nreturn {\n  json: {\n    sessionId: sessionId,\n    chatInput: fullPrompt,\n    originalMessage: currentMessage,\n    financialData: financialData,\n    profileSummary: financialProfile,\n    isVoiceInput: isVoiceInput,\n    mode: isVoiceInput ? 'voice' : 'text',\n    hasClarityAssessment: hasClarityAssessment,\n    clarityScore: hasClarityAssessment ? financialData.financialClaritySummary.percentage : null,\n    hasInvestments: hasInvestments,\n    investmentRatio: hasInvestments ? financialData.investmentInsights?.investmentRatio : null\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "e34cfb1f-a966-487a-826b-e4c0ab199973",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const agentOutput = $input.item.json.output || $input.item.json.text || 'No response';\n\nreturn {\n  json: {\n    reply: agentOutput,\n    success: true\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        0
+      ],
+      "id": "786ea31a-1a3e-4943-9683-3e0dc460eabd",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7a2d59d9-c77e-4509-8fbc-f6624fef09a9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5978efa8a7f2257e7743aa2eda0fca39a893ee19ab639d3a0b7689b24855442b"
+  },
+  "id": "Flgkt8hc7tbhJOiF",
+  "tags": []
+}
