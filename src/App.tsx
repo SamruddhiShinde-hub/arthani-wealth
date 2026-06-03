@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Menu, X, RotateCcw } from 'lucide-react';
 import './css/App.css';
-import { storage } from './utils/storage';
 
 // Import pages
 import HomePage from './pages/HomePage';
@@ -33,7 +32,7 @@ import RentVsBuyPage from './pages/RentVsBuyPage';
 import ChatWidget from './components/ChatWidget';
 
 // Main App Component
-export default function ArthaniWealth() {
+export default function SamruddhiWealth() {
   const [currentPage, setCurrentPage] = useState('home');
   const [menuOpen, setMenuOpen] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -102,7 +101,7 @@ export default function ArthaniWealth() {
               <TrendingUp className="text-white" size={24} />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              ArthaniWealth
+              SamruddhiWealth
             </span>
           </div>
           
@@ -180,9 +179,9 @@ export default function ArthaniWealth() {
       {/* Footer */}
       <footer className="bg-gradient-to-r from-emerald-800 to-teal-800 text-white py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-lg font-semibold mb-2">ArthaniWealth</p>
+          <p className="text-lg font-semibold mb-2">SamruddhiWealth</p>
           <p className="text-emerald-200">Empowering Your Financial Future</p>
-          <p className="text-sm text-emerald-300 mt-4">© 2024 ArthaniWealth. All rights reserved.</p>
+          <p className="text-sm text-emerald-300 mt-4">© 2024 SamruddhiWealth. All rights reserved.</p>
         </div>
       </footer>
 

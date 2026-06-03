@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DollarSign, TrendingUp, Home as HomeIcon, PiggyBank, TrendingDown, Calendar, BarChart3, Trash2 } from 'lucide-react';
+import { DollarSign, TrendingUp, Home as HomeIcon, PiggyBank, TrendingDown, BarChart3, Trash2 } from 'lucide-react';
 import { 
   calculateLoanEMI, 
   calculateSIP, 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle, ArrowLeft, TrendingUp, AlertCircle, Shield, Target } from 'lucide-react';
+import { CheckCircle, Circle, ArrowLeft, TrendingUp, AlertCircle } from 'lucide-react';
 import { storage } from '../utils/storage';
 
 interface FinancialClarityPageProps {

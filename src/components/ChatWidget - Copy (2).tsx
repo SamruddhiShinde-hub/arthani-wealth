@@ -230,7 +230,7 @@ export default function ChatWidget() {
       const goals = storage.get("financialGoals", []);
 
       let greeting =
-        "👋 Hi there! I'm your ArthaniWealth assistant. How can I help you today?";
+        "👋 Hi there! I'm your SamruddhiWealth assistant. How can I help you today?";
 
       if (risk || goals.length > 0) {
         greeting = "👋 Welcome back! ";
@@ -273,7 +273,7 @@ export default function ChatWidget() {
       const goals = storage.get("financialGoals", []);
 
       let greeting =
-        "👋 Hi there! I'm your ArthaniWealth assistant. How can I help you today?";
+        "👋 Hi there! I'm your SamruddhiWealth assistant. How can I help you today?";
 
       if (risk || goals.length > 0) {
         greeting = "👋 Welcome back! ";
@@ -465,7 +465,7 @@ export default function ChatWidget() {
       };
 
       const response = await fetch(
-        "https://salubrious-unmagnifying-latoyia.ngrok-free.dev/webhook/arthaniwealth-chat",
+        "https://salubrious-unmagnifying-latoyia.ngrok-free.dev/webhook/samruddhiwealth-chat",
         {
           method: "POST",
           headers: {
@@ -542,7 +542,7 @@ export default function ChatWidget() {
             <div className="flex items-center gap-2">
               <MessageCircle className="text-white" size={20} />
               <span className="text-white font-semibold">
-                ArthaniWealth Assistant
+                SamruddhiWealth Assistant
               </span>
             </div>
 

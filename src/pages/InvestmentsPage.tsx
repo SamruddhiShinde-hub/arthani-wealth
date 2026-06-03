@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
+import { TrendingUp, Plus, Trash2 } from 'lucide-react';
 import { storage } from '../utils/storage';
 
 type Investment = {
@@ -33,7 +33,6 @@ const categories = [
 export default function InvestmentsPage() {
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [newInvestment, setNewInvestment] = useState<Partial<Investment>>({
     type: 'SIP',
     frequency: 'Monthly',
@@ -85,21 +84,7 @@ export default function InvestmentsPage() {
     }
   };
 
-  const startEditing = (investment: Investment) => {
-    setEditingId(investment.id);
-  };
 
-  const saveEdit = (id: string, field: keyof Investment, value: any) => {
-    setInvestments(
-      investments.map((inv) =>
-        inv.id === id ? { ...inv, [field]: value } : inv
-      )
-    );
-  };
-
-  const cancelEdit = () => {
-    setEditingId(null);
-  };
 
   // Calculate monthly investment amount
   const getMonthlyAmount = (amount: number, frequency: string) => {

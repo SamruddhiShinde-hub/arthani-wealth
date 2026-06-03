@@ -35,9 +35,7 @@ export default function RetirementPage() {
   const [postRetirementExpensesAuto, setPostRetirementExpensesAuto] = useState(0);
   const [postRetirementExpensesManual, setPostRetirementExpensesManual] = useState(0);
   const [lumpSumWithdrawals, setLumpSumWithdrawals] = useState<LumpSumWithdrawal[]>([]);
-  
   const [simulationData, setSimulationData] = useState<SimulationRow[]>([]);
-  const [showLumpSumModal, setShowLumpSumModal] = useState(false);
 
   // Load saved data
   useEffect(() => {
@@ -73,6 +71,7 @@ export default function RetirementPage() {
   // Calculate simulation
   useEffect(() => {
     calculateSimulation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentAge, retirementAge, lifeExpectancy, currentSavings, monthlySaving, savingsIncrease, 
       preRetirementROI, capitalGainTax, postRetirementExpensesManual, householdInflation, lumpSumWithdrawals]);
 

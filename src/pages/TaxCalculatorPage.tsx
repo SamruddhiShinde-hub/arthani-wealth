@@ -54,6 +54,7 @@ export default function TaxCalculatorPage({ setCurrentPage }: TaxCalculatorPageP
       setOtherDeductions(saved.otherDeductions || otherDeductions);
     }
     setIsLoaded(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Save data

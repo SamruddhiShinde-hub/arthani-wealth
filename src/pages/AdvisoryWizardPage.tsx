@@ -1,7 +1,7 @@
 // AdvisoryWizardPage.tsx
 
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Circle, ArrowRight, ArrowLeft, Save } from 'lucide-react';
+import { CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { storage } from '../utils/storage';
 
 // Import existing components (we'll use them as sections)
@@ -63,7 +63,6 @@ export default function AdvisoryWizardPage({ setCurrentPage }: AdvisoryWizardPag
 
   // Load wizard progress
   useEffect(() => {
-    const savedProgress = storage.get('wizardProgress', {});
     const savedStep = storage.get('wizardCurrentStep', 1);
     
     // Check completion status from actual data

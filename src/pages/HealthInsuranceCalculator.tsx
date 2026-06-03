@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Heart, Users, MapPin, Activity, AlertCircle, CheckCircle, X } from "lucide-react";
+import { Heart, Users, MapPin, Activity, AlertCircle, CheckCircle } from "lucide-react";
 import { storage } from "../utils/storage";
 
 interface HealthInsuranceData {

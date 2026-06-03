@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Home, TrendingUp, DollarSign, Calculator } from 'lucide-react';
+import { Home, DollarSign, Calculator } from 'lucide-react';
 import { storage } from '../utils/storage';
 
-type Scenario = 'rent' | 'buy';
+
 
 export default function RentVsBuyPage() {
   // Buy scenario inputs

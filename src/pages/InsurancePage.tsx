@@ -335,7 +335,6 @@ export default function InsurancePage() {
     continuingIncomeCorpus;    // PV of business/dividend/pension income (NEW!)
 
   // STEP 3: Add existing insurance
-  const totalResourcesAvailable = totalContinuingAssets + existingInsurance;
 
   // STEP 4: Calculate insurance gap
   const totalInsuranceRequired = Math.max(0, totalFamilyNeeds - totalContinuingAssets);

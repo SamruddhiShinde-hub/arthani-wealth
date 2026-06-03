@@ -16,10 +16,10 @@ export default function AboutPage({ setCurrentPage }: AboutPageProps) {
             <Compass className="text-white" size={40} />
           </div>
           <h1 className="text-5xl font-bold text-gray-800 mb-4">
-            About ArthaniWealth
+            About SamruddhiWealth
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            ArthaniWealth is a <span className="font-semibold text-emerald-600">free, AI-powered</span> personal finance learning platform built for India.
+            SamruddhiWealth is a <span className="font-semibold text-emerald-600">free, AI-powered</span> personal finance learning platform built for India.
           </p>
         </div>
 
@@ -30,14 +30,14 @@ export default function AboutPage({ setCurrentPage }: AboutPageProps) {
             Our Mission
           </h2>
           <p className="text-lg text-emerald-50 leading-relaxed">
-            Make financial knowledge <span className="font-semibold">accessible, unbiased, and easy to understand</span> — with no paid courses, no commissions, and no hidden agenda.
+            Make financial knowledge <span className="font-semibold">accessible, unbiased, and easy to understand</span> ï¿½ with no paid courses, no commissions, and no hidden agenda.
           </p>
         </div>
 
         {/* Features Section */}
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-            What You'll Find on ArthaniWealth
+            What You'll Find on SamruddhiWealth
           </h2>
           
           <div className="grid md:grid-cols-2 gap-6">
@@ -153,7 +153,7 @@ export default function AboutPage({ setCurrentPage }: AboutPageProps) {
             <h2 className="text-3xl font-bold text-gray-800">Our Story</h2>
           </div>
           <p className="text-lg text-gray-700 leading-relaxed mb-4">
-            ArthaniWealth was created by finance and technology professionals who experienced firsthand how confusing and expensive good financial guidance can be in India.
+            SamruddhiWealth was created by finance and technology professionals who experienced firsthand how confusing and expensive good financial guidance can be in India.
           </p>
           <p className="text-lg text-gray-700 leading-relaxed">
             We built this platform so <span className="font-semibold text-emerald-600">every Indian can learn, plan, and make better money decisions</span> - without fear or complexity.
@@ -171,7 +171,7 @@ export default function AboutPage({ setCurrentPage }: AboutPageProps) {
                 Important Note (SEBI Compliance)
               </h2>
               <p className="text-gray-700 leading-relaxed mb-3">
-                ArthaniWealth is an <span className="font-semibold">educational platform</span>, not a SEBI-registered investment advisor.
+                SamruddhiWealth is an <span className="font-semibold">educational platform</span>, not a SEBI-registered investment advisor.
               </p>
               <p className="text-gray-700 leading-relaxed">
                 Use our tools to learn and gain confidence - and always consult a qualified professional for personalised investment decisions.

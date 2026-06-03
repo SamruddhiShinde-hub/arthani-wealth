@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, TrendingDown, Plus, Trash2, Target, ArrowLeft } from 'lucide-react';
+import { CreditCard, Plus, Trash2, Target, ArrowLeft } from 'lucide-react';
 import { storage } from '../utils/storage';
 
 type Debt = {

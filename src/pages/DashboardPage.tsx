@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PieChart, TrendingUp, TrendingDown, DollarSign, Target, Shield, AlertCircle } from 'lucide-react';
+import { TrendingUp, DollarSign, Target, Shield, AlertCircle } from 'lucide-react';
 import { storage } from '../utils/storage';
 import { PieChart as RechartsPie, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
 
@@ -68,8 +68,7 @@ export default function DashboardPage() {
       0
     );
 
-  // Total investment tracking (for display purposes)
-  const totalMonthlyInvestments = monthlySIPInvestments + monthlyEPFInvestment;
+
 
   // Net savings = Income - Expenses - SIP Investments (EPF excluded since already deducted)
   const monthlySavings = monthlyIncome - monthlyExpenses - monthlySIPInvestments;
@@ -78,8 +77,7 @@ export default function DashboardPage() {
   // Investment rate (% of income going to SIPs, excluding EPF)
   const investmentRate = monthlyIncome > 0 ? (monthlySIPInvestments / monthlyIncome) * 100 : 0;
 
-  // Total investment rate including EPF (for informational display)
-  const totalInvestmentRate = monthlyIncome > 0 ? (totalMonthlyInvestments / monthlyIncome) * 100 : 0;
+
 
   // Asset allocation data
   const assetsByCategory = data.assets.reduce((acc: any, asset: any) => {
@@ -93,18 +91,9 @@ export default function DashboardPage() {
     value: value as number,
   }));
 
-  // Expense breakdown
-  const expensesByCategory = data.expenses.reduce((acc: any, expense: any) => {
-    const category = expense.category || 'Other';
-    const monthly = getMonthlyAmount(expense.amount || 0, expense.frequency);
-    acc[category] = (acc[category] || 0) + monthly;
-    return acc;
-  }, {});
 
-  const expenseData = Object.entries(expensesByCategory).map(([name, value]) => ({
-    name,
-    value: value as number,
-  }));
+
+
 
   // Investment breakdown by category
   const investmentsByCategory = data.investments.reduce((acc: any, inv: any) => {

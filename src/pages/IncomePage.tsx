@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { storage } from '../utils/storage';
-import { DollarSign, TrendingUp, TrendingDown, PieChart, Plus, Trash2, Calendar, Info } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, PieChart, Plus, Trash2, Info } from 'lucide-react';
 
 type IncomeEntry = {
   id: string;
@@ -27,7 +27,6 @@ export default function IncomePage() {
   const [expenses, setExpenses] = useState<ExpenseEntry[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<'income' | 'expenses'>('income');
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
   // Load saved data
   useEffect(() => {

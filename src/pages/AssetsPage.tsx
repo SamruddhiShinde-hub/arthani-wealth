@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { storage } from '../utils/storage';
-import { TrendingUp, TrendingDown, PieChart, Plus, Trash2, Edit2, Save } from 'lucide-react';
+import { TrendingUp, TrendingDown, PieChart, Plus, Trash2 } from 'lucide-react';
 
 type Asset = {
   id: string;
@@ -24,7 +24,6 @@ export default function AssetsPage() {
   const [liabilities, setLiabilities] = useState<Liability[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<'assets' | 'liabilities'>('assets');
-  const [editingId, setEditingId] = useState<string | null>(null);
 
   // Load saved data
   useEffect(() => {
@@ -73,7 +72,6 @@ export default function AssetsPage() {
     };
 
     setAssets([newAsset, ...assets]);
-    setEditingId(newAsset.id);
   };
 
   // Add new liability
@@ -88,7 +86,6 @@ export default function AssetsPage() {
     };
 
     setLiabilities([newLiability, ...liabilities]);
-    setEditingId(newLiability.id);
   };
 
   // Update asset

@@ -1,10 +1,10 @@
 {
-  "name": "ArthaniWealth - Financial Advisor",
+  "name": "SamruddhiWealth - Financial Advisor",
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "arthaniwealth-chat",
+        "path": "samruddhiwealth-chat",
         "responseMode": "responseNode",
         "options": {}
       },

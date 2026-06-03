@@ -19,7 +19,7 @@ export default function ContactPage() {
 
     try {
       // Replace with your n8n webhook URL for contact form
-      // const response = await fetch('https://arthaniwealth.app.n8n.cloud/webhook/contact-form', {
+      // const response = await fetch('https://samruddhiwealth.app.n8n.cloud/webhook/contact-form', {
       const response = await fetch('https://salubrious-unmagnifying-latoyia.ngrok-free.dev/webhook/contact-form', {
         method: 'POST',
         headers: {
@@ -48,7 +48,7 @@ export default function ContactPage() {
 
     } catch (err) {
       console.error('Error submitting form:', err);
-      setError('Failed to send message. Please try again or email us directly at arthaniwealth@gmail.com');
+      setError('Failed to send message. Please try again or email us directly at samruddhiwealth@gmail.com');
     } finally {
       setIsSubmitting(false);
     }
@@ -162,10 +162,10 @@ export default function ContactPage() {
                 <p className="text-sm text-gray-600 text-center">
                   Or email us directly at{' '}
                   <a 
-                    href="mailto:arthaniwealth@gmail.com" 
+                    href="mailto:samruddhiwealth@gmail.com" 
                     className="text-emerald-600 hover:text-emerald-700 font-semibold"
                   >
-                    arthaniwealth@gmail.com
+                    samruddhiwealth@gmail.com
                   </a>
                 </p>
               </div>
